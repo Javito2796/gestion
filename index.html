@@ -414,6 +414,7 @@ function guardar() {
   var mov = { tipo: TIPO, codigo: $('fCodigo').value, cantidad: $('fCant').value, nota: $('fNota').value };
   if (TIPO === 'compra') { mov.precioTotal = $('fPrecio').value; mov.envio = $('fEnvio').value; mov.proveedor = $('fProv').value; mov.medio = $('fMedio').value; }
   $('bGuardar').disabled = true;
+  var g = $('msg'); g.style.display = 'block'; g.className = 'msg'; g.textContent = 'Guardando…';
   servidor('registrar', mov).then(function (r) {
     var m = $('msg'); m.style.display = 'block';
     if (r.error) { m.className = 'msg urgente'; m.textContent = r.error; return; }
@@ -478,12 +479,15 @@ function confirmarDictado() {
     if (r.tipo === 'compra') m.precioTotal = r.precio;
     return m;
   });
+  // se saca de la pantalla al instante, así no se puede tocar dos veces; si falla, vuelve
+  $('dRenglones').innerHTML = '';
+  avisoDictado('', 'Guardando…');
   servidor('registrarVarios', movs).then(function (r) {
-    if (r.error) { avisoDictado('urgente', r.error); return; }
+    if (r.error) { pintarRenglones(); avisoDictado('urgente', r.error); return; }
     E = r.estado; P = null; pintarInicio(); pintarStock();
     avisoDictado('okk', 'Guardado:<br>' + r.filas.map(function (f) { return (f.cantidad > 0 ? '+' : '') + n(f.cantidad, 3) + ' ' + esc(nombreDe(f.codigo)); }).join('<br>'), true);
-    REN = []; SIN = ''; $('dTexto').value = ''; $('dRenglones').innerHTML = '';
-  }).catch(function (err) { avisoDictado('urgente', 'Error: ' + err.message); });
+    REN = []; SIN = ''; $('dTexto').value = '';
+  }).catch(function (err) { pintarRenglones(); avisoDictado('urgente', 'Error: ' + err.message); });
 }
 function avisoDictado(clase, txt, html) {
   var m = $('dMsg'); m.style.display = 'block'; m.className = 'msg ' + clase;
